@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dalta Mining - Free 2 DLT Daily</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #1e0033, #4a00a3); color:white; min-height:100vh; }
+    .container { max-width:500px; margin:20px auto; padding:20px; background:rgba(0,0,0,0.5); border-radius:25px; box-shadow:0 15px 40px rgba(0,0,0,0.6); }
+    h1 { text-align:center; font-size:28px; margin-bottom:10px; }
+    .subtitle { text-align:center; font-size:18px; opacity:0.9; margin-bottom:20px; }
+    .btn { width:100%; padding:16px; margin:12px 0; border:none; border-radius:15px; font-size:18px; font-weight:bold; cursor:pointer; transition:0.3s; }
+    .btn-connect { background:#ff4d8d; }
+    .btn-claim { background:#00d4ff; }
+    .btn-withdraw { background:#ff9d00; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .card { background:rgba(255,255,255,0.1); padding:18px; border-radius:15px; margin:15px 0; text-align:center; font-size:20px; }
+    .timer { font-size:26px; font-weight:bold; color:#ffff00; text-align:center; margin:20px 0; }
+    input { width:100%; padding:15px; margin:10px 0; border-radius:12px; border:none; font-size:18px; text-align:center; }
+    .ref { background:rgba(0,255,0,0.1); padding:15px; border-radius:12px; word-break:break-all; margin:20px 0; font-size:15px; }
+    .stats { text-align:center; margin-top:20px; font-size:16px; opacity:0.8; }
+    .footer { text-align:center; margin-top:30px; font-size:14px; opacity:0.7; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+  <h1>Dalta (DLT) Mining</h1>
+  <p class="subtitle">Free 2 DLT Every 24 Hours • Withdraw Anytime</p>
+
+  <div id="connectDiv">
+    <button class="btn btn-connect" onclick="connect()">Connect Wallet</button>
+  </div>
+
+  <div id="mainDiv" style="display:none;">
+    <div class="card">
+      Mining Balance: <b id="mining">0.00</b> DLT
+    </div>
+    <div class="card">
+      Wallet Balance: <b id="wallet">0.00</b> DLT
+    </div>
+
+    <div class="timer" id="timer">Loading timer...</div>
+
+    <button class="btn btn-claim" id="claimBtn" onclick="claimReward()">Claim 2 DLT (Free)</button>
+
+    <input type="number" step="any" id="amt" placeholder="Enter amount to withdraw" />
+    <button class="btn btn-withdraw" onclick="withdrawTokens()">Withdraw to Wallet (0.002 BNB fee)</button>
+
+    <div class="ref">
+      <b>Your Referral Link:</b><br>
+      <span id="refLink">Loading...</span>
+    </div>
+
+    <div class="stats" id="stats">Loading referrals...</div>
+  </div>
+
+  <div class="footer">
+    Contract: 0x96efE3...8493<br>
+    Made for Dalta Army
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+<script>
+// Contract Info
+const CONTRACT = "0x96efE3AafE88CDdCbfeB8a4ABeDBBa8F04978493";
+const ABI = [/* ← wohi ABI jo aapne di thi, main short kar raha hoon space ke liye */];
+const abi = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Claimed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DepositedTokens","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"FeeCollected","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"sponsor","type":"address"}],"name":"Joined","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Withdrawn","type":"event"},{"inputs":[],"name":"CLAIM_INTERVAL","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DAILY_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"JOIN_BONUS","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"SPONSOR_BONUS","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"WITHDRAW_FEE_BNB","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"canClaim","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"claim","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"sponsor","type":"address"}],"name":"join","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"miningBalanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"realWalletBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"payable","type":"function"}];
+
+let web3, contract, account, contract;
+
+async function connect() {
+  if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
+    web3 = new Web3(window.ethereum || window.web3.currentProvider);
+    try {
+      await window.ethereum.enable();
+      const accounts = await web3.eth.getAccounts();
+      account = accounts[0];
+      contract = new web3.eth.Contract(abi, CONTRACT);
+
+      document.getElementById("connectDiv").style.display = "none";
+      document.getElementById("mainDiv").style.display = "block";
+      document.getElementById("refLink").innerText = window.location.href.split('?')[0] + "?ref=" + account;
+
+      loadAllData();
+      setInterval(loadAllData, 10000);
+      startCountdown();
+      checkReferral();
+    } catch(e) { alert("Connect karne se mana kiya!"); }
+  } else {
+    alert("Please install Trust Wallet or MetaMask!");
+  }
+}
+
+async function loadAllData() {
+  const m = await contract.methods.miningBalanceOf(account).call();
+  const w = await contract.methods.realWalletBalance(account).call();
+  document.getElementById("mining").innerText = (m / 1e18).toFixed(4);
+  document.getElementById("wallet").innerText = (w / 1e18).toFixed(4);
+
+  const can = await contract.methods.canClaim(account).call();
+  document.getElementById("claimBtn").disabled = !can;
+}
+
+async function claimReward() {
+  await contract.methods.claim().send({from: account})
+    .on('transactionHash', h => alert("Claiming... TX: " + h.slice(0,10)+"..."))
+    .on('receipt', () => { alert("2 DLT Claimed Successfully!"); loadAllData(); });
+}
+
+async function withdrawTokens() {
+  const amount = document.getElementById("amt").value;
+  if (!amount || amount <= 0) return alert("Amount daalo bhai");
+  const wei = web3.utils.toWei(amount, "ether");
+  await contract.methods.withdraw(wei).send({
+    from: account,
+    value: web3.utils.toWei("0.002", "ether")
+  })
+  .on('transactionHash', h => alert("Withdrawing... TX: " + h.slice(0,10)+"..."))
+  .on('receipt', () => { alert("Withdrawn! Check your wallet"); loadAllData(); });
+}
+
+function startCountdown() {
+  setInterval(async () => {
+    if (!account) return;
+    try {
+      const last = await contract.methods.lastClaimTime(account).call();
+      const next = Number(last) + 86400;
+      const now = Math.floor(Date.now()/1000);
+      let left = next - now;
+      if (left <= 0) {
+        document.getElementById("timer").innerHTML = "<span style='color:#00ff00'>Claim Now!</span>";
+      } else {
+        const h = String(Math.floor(left/3600)).padStart(2,'0');
+        const m = String(Math.floor((left%3600)/60)).padStart(2,'0');
+        const s = String(left%60).padStart(2,'0');
+        document.getElementById("timer").innerText = `\( {h}: \){m}:${s}`;
+      }
+    } catch(e) {}
+  }, 1000);
+}
+
+// Referral se auto join
+function checkReferral() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  if (ref && ref.length === 42 && ref !== account) {
+    setTimeout(() => {
+      if(confirm("Referral se join karoge?\nSponsor: " + ref.slice(0,8)+"...")) {
+        contract.methods.join(ref).send({from: account})
+          .on('receipt', () => alert("Joined with referral! 50 DLT Bonus!"));
+      }
+    }, 2000);
+  }
+}
+</script>
+</body>
+</html>
